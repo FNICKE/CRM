@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { addAccount } from '../../../src/features/accounts/accountsSlice';import * as XLSX from 'xlsx';
 import { 
   UploadCloud, 
   FileSpreadsheet, 
@@ -10,6 +12,7 @@ import {
 } from 'lucide-react';
 
 const AccountUpload = () => {
+  const dispatch = useDispatch();
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('idle'); // idle, uploading, success
@@ -23,28 +26,70 @@ const AccountUpload = () => {
     setIsDragging(false);
   };
 
+  const processFile = (selectedFile) => {
+    setUploadStatus('uploading');
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const data = e.target.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const parsedData = XLSX.utils.sheet_to_json(sheet);
+
+        // Validation: Ensure the data is an array and not empty
+        if (parsedData.length === 0) {
+          alert("The file is empty or formatted incorrectly.");
+          setUploadStatus('idle');
+          return;
+        }
+
+        // Map data and dispatch to Redux
+        parsedData.forEach((row) => {
+          dispatch(addAccount({
+            name: row.Name || row.name || 'Unknown',
+            email: row.Email || row.email || 'N/A',
+            phone: row.Phone || row.phone || 'N/A',
+            website: row.Website || row.website || 'N/A',
+            industry: row.Industry || row.industry || 'n/a',
+            status: true, // Defaulting new imports to active
+            remark: row.Remark || row.remark || ''
+          }));
+        });
+
+        setTimeout(() => setUploadStatus('success'), 800);
+      } catch (error) {
+        console.error("Excel processing error:", error);
+        alert("Error processing file. Please ensure it is a valid Excel/CSV.");
+        setUploadStatus('idle');
+      }
+    };
+
+    reader.readAsBinaryString(selectedFile);
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && (droppedFile.type === "text/csv" || droppedFile.name.endsWith('.xlsx'))) {
+    if (droppedFile && (droppedFile.name.endsWith('.xlsx') || droppedFile.name.endsWith('.csv'))) {
       setFile(droppedFile);
+      processFile(droppedFile);
     }
   };
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) setFile(selectedFile);
+    if (selectedFile) {
+      setFile(selectedFile);
+      processFile(selectedFile);
+    }
   };
 
   const removeFile = () => {
     setFile(null);
     setUploadStatus('idle');
-  };
-
-  const simulateUpload = () => {
-    setUploadStatus('uploading');
-    setTimeout(() => setUploadStatus('success'), 1800);
   };
 
   return (
@@ -66,7 +111,7 @@ const AccountUpload = () => {
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Upload Successful</h3>
-              <p className="text-gray-600 mt-1 text-sm">Data is being processed</p>
+              <p className="text-gray-600 mt-1 text-sm">Data has been synced to your account list</p>
             </div>
             <button 
               onClick={removeFile}
@@ -84,7 +129,7 @@ const AccountUpload = () => {
                 onDrop={handleDrop}
                 className={`
                   border-2 border-dashed border-gray-300 p-10 md:p-16 flex flex-col items-center
-                  cursor-pointer hover:border-gray-400
+                  cursor-pointer hover:border-gray-400 transition-colors
                   ${isDragging ? 'border-blue-500 bg-blue-50' : ''}
                 `}
               >
@@ -92,7 +137,7 @@ const AccountUpload = () => {
                   type="file" 
                   className="hidden" 
                   onChange={handleFileSelect} 
-                  accept=".csv,.xlsx" 
+                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
                 />
                 <UploadCloud size={36} className="text-gray-400 mb-4" />
                 <p className="text-gray-800 font-medium">Click or drag file here</p>
@@ -118,23 +163,14 @@ const AccountUpload = () => {
               </div>
             )}
 
-            {file && uploadStatus === 'idle' && (
-              <button 
-                onClick={simulateUpload}
-                className="w-full bg-blue-600 text-white py-3 text-sm hover:bg-blue-700 flex items-center justify-center gap-2"
-              >
-                Import File <ArrowRight size={16} />
-              </button>
-            )}
-
             {uploadStatus === 'uploading' && (
               <div className="space-y-2 py-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-blue-600">Processing...</span>
-                  <span className="text-gray-500">~2 sec</span>
+                  <span className="text-blue-600 font-medium">Processing Data...</span>
+                  <span className="text-gray-500 animate-pulse">Wait a moment</span>
                 </div>
-                <div className="h-1 bg-gray-200">
-                  <div className="h-full bg-blue-600 w-3/4 transition-all duration-1500"></div>
+                <div className="h-1 bg-gray-200 overflow-hidden">
+                  <div className="h-full bg-blue-600 w-full transition-all duration-1000 origin-left scale-x-75 animate-pulse"></div>
                 </div>
               </div>
             )}

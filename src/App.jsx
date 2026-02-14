@@ -4,7 +4,7 @@ import DataTable from './pages/DataTable';
 import Dashboard from './pages/Dashboard';
 import Report from './pages/Account/Report'; // Import the new Report component
 import AccountUpload from './pages/Account/Upload'; // Import the Upload component
-import { ChevronRight, Bell, User, Search, LayoutGrid } from 'lucide-react';
+import { ChevronRight, LayoutGrid } from 'lucide-react';
 
 function App() {
   // State to track which page is active
@@ -61,15 +61,7 @@ function App() {
           </div>
 
           <div className="flex items-center gap-[1.5rem]">
-           
-
-            <div className="flex items-center gap-[1rem] border-l pl-[1.5rem] border-gray-200">
-               <button className="text-gray-400 hover:text-blue-600 relative p-2 hover:bg-blue-50 rounded-full transition-colors">
-                 <Bell size={20} />
-                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-               </button>
-               
-            </div>
+            {/* Notification bell removed as requested */}
           </div>
         </header>
 
