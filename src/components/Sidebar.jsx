@@ -84,10 +84,8 @@ const Sidebar = ({ onNavigate, activeTab }) => {
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         
-        {/* Header with close button (mobile) */}
         <div className="p-5 flex items-center justify-between">
           <div className="text-lg font-semibold text-gray-800">
-            {/* Your logo / app name here if needed */}
           </div>
           <button 
             onClick={() => setIsOpen(false)} 
@@ -131,9 +129,7 @@ const Sidebar = ({ onNavigate, activeTab }) => {
           </div>
         </div>
 
-        {/* Bottom area (can add logout etc later) */}
         <div className="mt-auto border-t border-gray-100 p-4">
-          {/* empty for now */}
         </div>
       </aside>
     </>
